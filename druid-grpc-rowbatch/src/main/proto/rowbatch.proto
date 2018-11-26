@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package grpcrowbatch;
+
+option java_multiple_files = false;
+option java_package = "org.apache.druid.server.grpc";
+option java_outer_classname = "GrpcRowBatch";
+
+service RowBatchQueryService {
+    // Execute a query and stream results back in micro-batches.
+    // Return the batch schema in the first response. Return the accumulated dimension dictionary in the last response.
+    rpc Process (QueryRequest) returns (stream RowBatchResponse) {}
+}
+
+message QueryRequest {
+    string query = 1; // a string representation of a query (e.g. JSON or SQL)
+}
+
+// Dimension values are supposed to be dictionary-encoded and so represented by integers.
+// All fields assume a custom Avro-style marshaller capable of interpreting raw byte arrays.
+message RowBatchResponse {
+    RowBatchSchema schema = 1; // row schema descriptor; in the first message only
+
+    bytes batch = 2; // a batch of rows
+
+    bytes dictionary = 3; // dictionary-encoded dimension values; in the last message only
+}
+
+// | Time | Dim1 .. DimN | Metric1 .. MetricM | where
+// Time is a long timestamp, Dimensions are dictionary-encoded, metrics could have double or long values
+message RowBatchSchema {
+    message RowBatchField {
+        enum RowBatchFieldType {
+            TIME = 0;
+            DIMENSION = 1;
+            DOUBLE_METRIC = 2;
+            LONG_METRIC = 3;
+        }
+
+        string fieldName = 1;
+        RowBatchFieldType fieldType = 2;
+    }
+
+    repeated RowBatchField fields = 1;
+}
