@@ -21,27 +21,19 @@ package org.apache.druid.server.grpc;
 
 import com.fasterxml.jackson.databind.Module;
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
-import io.grpc.BindableService;
-import org.apache.druid.guice.Jerseys;
+import com.google.inject.Singleton;
+import org.apache.druid.guice.LifecycleModule;
 import org.apache.druid.initialization.DruidModule;
-import org.apache.druid.server.grpc.server.GrpcServer;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Function;
-
-import static com.google.common.collect.Lists.newArrayList;
 
 public final class GrpcModule implements DruidModule
 {
-  private static final String PROPERTY_RPC_ENABLE = "druid.rpc.enable";
+  private static final String PROPERTY_GRPC_ENABLE = "druid.grpc.enable";
 
   @Inject
   private Properties props;
@@ -50,15 +42,19 @@ public final class GrpcModule implements DruidModule
   public void configure(Binder binder)
   {
     if (isEnabled()) {
-      Jerseys.addResource(binder, DruidGrpcQueryExecutor.class);
-      binder.bind(GrpcQueryExecutor.class).to(DruidGrpcQueryExecutor.class);
+      //JsonConfigProvider.bind(binder, "druid.grpc", GrpcConfig.class); todo extract GrpcConfig
+
+      binder.bind(GrpcQueryExecutor.class).to(DruidGrpcQueryExecutor.class).in(Singleton.class);
+
+      //binder.bind(GrpcInitializer.class).to(GrpcEndpointInitializer.class).in(Singleton.class)/*.asEagerSingleton()*/;
+      LifecycleModule.register(binder, GrpcEndpointInitializer.class);
     }
   }
 
   private boolean isEnabled()
   {
     Preconditions.checkNotNull(props, "props");
-    return Boolean.valueOf(props.getProperty(PROPERTY_RPC_ENABLE, "false"));
+    return Boolean.valueOf(props.getProperty(PROPERTY_GRPC_ENABLE, "false"));
   }
 
   @Override
@@ -67,26 +63,4 @@ public final class GrpcModule implements DruidModule
     return Collections.emptyList();
   }
 
-  private static class GrpcInitializer {
-    private GrpcServer server;
-
-    public GrpcServer startUp(String host, int port, Function<Executor, BindableService> factory, int nServerThreads, int nHandlerThreads) {
-      server = new GrpcServer(
-        host,
-        port,
-        newArrayList(factory.apply(executor(nHandlerThreads, "grpc-handler-%d"))),
-        executor(nServerThreads, "grpc-server-%d"));
-
-      server.start();
-      return server;
-    }
-
-    public void shutDown() {
-      server.stop();
-    }
-
-    private static ExecutorService executor(int nThreads, String name) {
-      return Executors.newFixedThreadPool(nThreads, new ThreadFactoryBuilder().setNameFormat(name).build());
-    }
-  }
 }

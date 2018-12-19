@@ -41,7 +41,7 @@ import org.apache.druid.server.security.AllowAllAuthenticator;
  */
 public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
 {
-  private static final Logger log = new Logger(DruidGrpcQueryExecutor.class);
+  private static final Logger logger = new Logger(DruidGrpcQueryExecutor.class);
 
   private final QueryLifecycleFactory queryLifecycleFactory;
 
@@ -59,6 +59,8 @@ public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
   @Override
   public void execute(String queryJson, StreamObserver<GrpcRowBatch.RowBatchResponse> observer )
   {
+    logger.info("Processing query: " + queryJson);
+
     final QueryLifecycle queryLifecycle = queryLifecycleFactory.factorize();
 
     try {
@@ -82,7 +84,7 @@ public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
           yielder.close();
         }
         catch (Exception ex) {
-          log.warn(ex, "Failed to close yielder");
+          logger.warn(ex, "Failed to close yielder");
         }
         batcher.onError(e);
         throw e;
@@ -90,7 +92,7 @@ public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
 
     }
     catch (Exception e) {
-      log.error(e, "Failed to execute query:" + queryJson);
+      logger.error(e, "Failed to execute query:" + queryJson);
     }
   }
 

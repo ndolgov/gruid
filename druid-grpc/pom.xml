@@ -38,7 +38,7 @@
     <easymock.version>3.4</easymock.version>
     <guava.version>16.0.1</guava.version>
     <junit.version>4.12</junit.version>
-    <project.parent.version>0.13.0-incubating-SNAPSHOT</project.parent.version>
+    <project.parent.version>0.13.0-incubating</project.parent.version>
     <slf4j.version>1.6.4</slf4j.version>
 
     <grpc.version>1.16.1</grpc.version>
@@ -71,6 +71,12 @@
       <groupId>io.grpc</groupId>
       <artifactId>grpc-stub</artifactId>
       <version>${grpc.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.druid</groupId>
+      <artifactId>druid-api</artifactId>
+      <version>${project.parent.version}</version>
     </dependency>
 
     <dependency>
@@ -144,6 +150,13 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.druid</groupId>
+      <artifactId>druid-common</artifactId> <!-- CalciteTests dependencies-->
+      <version>${project.parent.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.apache.druid</groupId>
       <artifactId>druid-sql</artifactId> <!-- CalciteTests dependencies-->

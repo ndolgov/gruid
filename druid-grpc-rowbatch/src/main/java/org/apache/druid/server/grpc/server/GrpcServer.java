@@ -12,25 +12,26 @@ import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Create a GRPC server for a given request handlers and bind it to the provided "host:port" address.
+ * Create a GRPC server for given request handlers and bind it to the provided TCP address.
  */
 public final class GrpcServer {
     private static final Logger logger = LoggerFactory.getLogger(GrpcServer.class);
-    private final ExecutorService executor;
+
+    private final InetSocketAddress address;
+
     private final Server server;
-    private final int port;
 
     public GrpcServer(String hostname, int port, Collection<BindableService> services, ExecutorService executor) {
-        this.port = port;
-        this.executor = executor;
+        address = new InetSocketAddress(hostname, port);
 
-        final ServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(hostname, port));
+        final ServerBuilder builder = NettyServerBuilder.forAddress(address);
         services.forEach(builder::addService);
-        this.server = builder.executor(executor).build();
+        server = builder.executor(executor).build();
     }
 
     public void start() {
         try {
+            logger.info("Starting " + this);
             server.start();
             logger.info("Started " + this);
         } catch (Exception e) {
@@ -41,11 +42,7 @@ public final class GrpcServer {
     public void stop() {
         try {
             logger.info("Stopping " + this);
-
-            executor.shutdown();
-
             server.shutdown();
-
             logger.info("Stopped " + this);
         } catch (Exception e) {
             logger.warn("Interrupted while shutting down " + this);
@@ -54,6 +51,6 @@ public final class GrpcServer {
 
     @Override
     public String toString() {
-        return "{GrpcServer:port=" + port + "}";
+        return "{GrpcServer:addr=" + address + "}";
     }
 }
