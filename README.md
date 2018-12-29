@@ -37,5 +37,25 @@ is rather complicated and it will take time to grok.
 
 ```DruidGrpcQueryRunnerTest``` is as far as the integration with Druid goes right now. 
 
-I need to sort out DI with Guice 
-(especially property injection and eager initialization) and unusual Druid coding style rules.
+I need to sort out transitive dependency conflicts. Druid's Guava version is really old. 
+
+###### Druid extension configuration
+
+Assuming official [Druid tutorial](http://druid.io/docs/latest/tutorials/index.html) setup in place:
+* copy the locally built extension uber JAR file
+* edit Druid configuration to enable and configure the extension 
+
+```
+mkdir -p $DRUID_HOME/extensions/druid-grpc/
+cp druid-grpc-0.13.0-incubating-SNAPSHOT.jar $DRUID_HOME/extensions/druid-grpc/
+
+cd $DRUID_HOME
+vi quickstart/tutorial/conf/druid/broker/runtime.properties
+
+druid.extensions.loadList=["druid-grpc"]```
+druid.grpc.enable=true
+druid.grpc.port=20001
+druid.grpc.numHandlerThreads=8
+druid.grpc.numServerThreads=4
+
+bin/supervise -c quickstart/tutorial/conf/tutorial-cluster.conf

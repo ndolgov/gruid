@@ -38,13 +38,14 @@
     <easymock.version>3.4</easymock.version>
     <guava.version>16.0.1</guava.version>
     <junit.version>4.12</junit.version>
-    <project.parent.version>0.13.0-incubating</project.parent.version>
+    <druid.version>0.13.0-incubating</druid.version> <!-- project.parent.version -->
     <slf4j.version>1.6.4</slf4j.version>
 
     <grpc.version>1.16.1</grpc.version>
     <protoc.version>3.5.1</protoc.version>
     <rowbatch.version>0.13.0-SNAPSHOT</rowbatch.version>
     <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
+    <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -76,32 +77,36 @@
     <dependency>
       <groupId>org.apache.druid</groupId>
       <artifactId>druid-api</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${druid.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.druid</groupId>
       <artifactId>druid-server</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${druid.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>${slf4j.version}</version>
-      <scope>runtime</scope>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Tests -->
@@ -128,16 +133,8 @@
 
     <dependency>
       <groupId>org.apache.druid</groupId>
-      <artifactId>druid-core</artifactId>
-      <version>${project.parent.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.druid</groupId>
       <artifactId>druid-processing</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${druid.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -145,7 +142,7 @@
     <dependency>
       <groupId>org.apache.druid</groupId>
       <artifactId>druid-server</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${druid.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -153,20 +150,20 @@
     <dependency>
       <groupId>org.apache.druid</groupId>
       <artifactId>druid-common</artifactId> <!-- CalciteTests dependencies-->
-      <version>${project.parent.version}</version>
+      <version>${druid.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.druid</groupId>
       <artifactId>druid-sql</artifactId> <!-- CalciteTests dependencies-->
-      <version>${project.parent.version}</version>
+      <version>${druid.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency> <!-- CalciteTests -->
       <groupId>org.apache.druid</groupId>
       <artifactId>druid-sql</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${druid.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -182,6 +179,20 @@
           <source>1.8</source>
           <target>1.8</target>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven.shade.plugin.version}</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+            </execution>
+          </executions>
       </plugin>
     </plugins>
   </build>

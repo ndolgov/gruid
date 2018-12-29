@@ -9,7 +9,6 @@ import org.apache.druid.java.util.common.lifecycle.LifecycleStart;
 import org.apache.druid.java.util.common.lifecycle.LifecycleStop;
 import org.apache.druid.server.DruidNode;
 import org.apache.druid.server.grpc.server.GrpcServer;
-import org.apache.druid.server.initialization.ServerConfig;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,7 +20,7 @@ import static com.google.common.collect.Lists.newArrayList;
 @ManageLifecycle
 public final class GrpcEndpointInitializer
 {
-  private final ServerConfig serverConfig;
+  private final GrpcConfig grpcConfig;
 
   private final DruidNode druidNode;
 
@@ -30,9 +29,9 @@ public final class GrpcEndpointInitializer
   private GrpcServer server;
 
   @Inject
-  public GrpcEndpointInitializer(ServerConfig serverConfig, @Self DruidNode druidNode, GrpcQueryExecutor queryExecutor)
+  public GrpcEndpointInitializer(GrpcConfig grpcConfig, @Self DruidNode druidNode, GrpcQueryExecutor queryExecutor)
   {
-    this.serverConfig = serverConfig;
+    this.grpcConfig = grpcConfig;
     this.druidNode = druidNode;
     this.queryExecutor = queryExecutor;
   }
@@ -42,9 +41,10 @@ public final class GrpcEndpointInitializer
   {
     server = create(
       executor -> new DruidRowBatchQueryService(executor, queryExecutor),
-      serverConfig.getNumThreads(),
+      grpcConfig.getNumHandlerThreads(),
+      grpcConfig.getNumServerThreads(),
       druidNode.getHost(),
-      druidNode.getPortToUse());
+      grpcConfig.getPort());
 
     server.start();
   }
@@ -55,10 +55,7 @@ public final class GrpcEndpointInitializer
     server.stop();
   }
 
-  private GrpcServer create(Function<ExecutorService, BindableService> factory, int numThreads, String host, int port) {
-    final int nHandlerThreads = numThreads; // TODO a reasonable way to size them up or add explicit gruid properties
-    final int nServerThreads = numThreads;
-
+  private GrpcServer create(Function<ExecutorService, BindableService> factory, int nHandlerThreads, int nServerThreads, String host, int port) {
     final GrpcServer srvr = new GrpcServer(
       host, port,
       newArrayList(factory.apply(executor(nHandlerThreads, "grpc-handler-%d"))),

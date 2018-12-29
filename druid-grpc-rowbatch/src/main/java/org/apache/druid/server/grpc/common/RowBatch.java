@@ -75,4 +75,9 @@ public final class RowBatch {
 
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "{RowBatch:capacity=" + capacity + ", LCs=" + longColumns.length + ", DCs=" + doubleColumns.length + "}";
+    }
 }

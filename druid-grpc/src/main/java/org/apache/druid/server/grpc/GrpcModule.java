@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.druid.guice.JsonConfigProvider;
 import org.apache.druid.guice.LifecycleModule;
 import org.apache.druid.initialization.DruidModule;
 
@@ -42,11 +43,10 @@ public final class GrpcModule implements DruidModule
   public void configure(Binder binder)
   {
     if (isEnabled()) {
-      //JsonConfigProvider.bind(binder, "druid.grpc", GrpcConfig.class); todo extract GrpcConfig
+      JsonConfigProvider.bind(binder, "druid.grpc", GrpcConfig.class);
 
       binder.bind(GrpcQueryExecutor.class).to(DruidGrpcQueryExecutor.class).in(Singleton.class);
 
-      //binder.bind(GrpcInitializer.class).to(GrpcEndpointInitializer.class).in(Singleton.class)/*.asEagerSingleton()*/;
       LifecycleModule.register(binder, GrpcEndpointInitializer.class);
     }
   }

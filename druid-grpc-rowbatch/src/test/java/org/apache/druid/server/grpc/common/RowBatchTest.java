@@ -2,11 +2,13 @@ package org.apache.druid.server.grpc.common;
 
 import org.apache.druid.server.grpc.common.Marshallers.RowBatchMarshallerImpl;
 import org.testng.annotations.Test;
+import org.testng.collections.Lists;
 
 import java.nio.ByteBuffer;
 
 import static org.apache.druid.server.grpc.common.RowBatch.NULL_DOUBLE;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public final class RowBatchTest {
@@ -20,6 +22,26 @@ public final class RowBatchTest {
         final RowBatch unmarshalled = marshaller.unmarshal(buffer);
 
         assertTrue(batch.eq(unmarshalled));
+    }
+
+    @Test
+    public void testRowBatchReader() {
+        final QuerySchemas.QuerySchema schema = new QuerySchemas.QuerySchema(
+          Lists.newArrayList("D1"),
+          Lists.newArrayList(
+            new QuerySchemas.QuerySchemaMetric("M1", QuerySchemas.MetricType.DOUBLE),
+            new QuerySchemas.QuerySchemaMetric("M2", QuerySchemas.MetricType.DOUBLE),
+            new QuerySchemas.QuerySchemaMetric("M3", QuerySchemas.MetricType.DOUBLE)));
+
+        final RowBatch batch = createRowBatch();
+        batch.reset();
+
+        final RowBatchReaders.RowBatchReader reader = RowBatchReaders.reader(schema).reset(batch);
+
+        assertTrue(reader.hasNext());
+        assertEquals(reader.next().timestamp, 2018);
+        assertEquals(reader.next().timestamp, 2019);
+        assertFalse(reader.hasNext());
     }
 
     public static RowBatch createRowBatch() {
