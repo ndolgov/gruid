@@ -70,7 +70,7 @@ public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
 
       final Sequence seq = queryLifecycle.runSimple(query, AllowAllAuthenticator.ALLOW_ALL_RESULT, null); // todo client ref?
 
-      Yielder<Row> yielder = Yielders.each(seq);
+      Yielder<Row> yielder = Yielders.each(seq); // todo <Row> is returned by GroupBy queries only
       try {
         while (!yielder.isDone()) {
           final Row row = yielder.get();
@@ -87,12 +87,11 @@ public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
           logger.warn(ex, "Failed to close yielder");
         }
         batcher.onError(e);
-        throw e;
       }
-
     }
     catch (Exception e) {
       logger.error(e, "Failed to execute query:" + queryJson);
+      observer.onError(e);
     }
   }
 

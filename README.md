@@ -1,8 +1,13 @@
 #### gRPC Druid extension PoC
 
 For a sophisticated engine dealing with voluminous data Druid lacks means of retrieving query results efficiently.
-It seems to be a [matter of policy](https://github.com/apache/incubator-druid/issues/3891). I wanted to see what
-it takes to actually implement it. It is work in progress currently.
+Judging from [a rejected issue](https://github.com/apache/incubator-druid/issues/3891) I thought it was a matter of policy. 
+I wanted to see what it takes to actually implement it. 
+
+When I had troubles with transitive dependency conflicts and asked politely :) the kind folks on Druid dev mailing list
+shared another [similar extension](https://github.com/apache/incubator-druid/pull/6798). I borrowed their Guava version 
+conflict workaround based on shading Guava classes and manually setting a classloader during initialization. The rest of
+it is not exactly what I have in mind so this PoC still makes sense to me.
 
 There are two libraries in this project:
 * druid-grpc-rowbatch is a library with support for efficient row encoding using protobuf
@@ -22,28 +27,23 @@ operations such as comparison are much more efficient with integer types
 ##### Alternatives
 
 * Avro over gRPC - too generic for a first iteration, might happen later 
-* Arrow / Flight - very new, the RPC part is under-documented, not used by Druid core anyway
+* Arrow / Flight - very new, the RPC part is under-documented, not used by Druid core anyway (and so promises more transitive dependency whack-a-mole fun)
 * Avatica - it seems to have a binary, protobuf-based transport but there's not enough documentation. The Calcite integration
 is rather complicated and it will take time to grok.
 
-##### References
-
-* [protobuf HTTP extension spec](https://cloud.google.com/service-management/reference/rpc/google.api#httprule)
-* [protobuf HTTP extension](https://github.com/googleapis/googleapis/blob/master/google/api/http.proto)
-* [Scala grpcgateway blog](https://www.beyondthelines.net/computing/grpc-rest-gateway-in-scala/)   
-
-
 ##### Running locally
 
-```DruidGrpcQueryRunnerTest``` is as far as the integration with Druid goes right now. 
+Executing ```DruidGrpcQueryRunnerTest``` is the easiest way to see this extension working with little hassle.
 
-I need to sort out transitive dependency conflicts. Druid's Guava version is really old. 
+Otherwise, build both modules locally with ```mvn clean install```. Then follow the instructions from the next section.
 
 ###### Druid extension configuration
 
 Assuming official [Druid tutorial](http://druid.io/docs/latest/tutorials/index.html) setup in place:
 * copy the locally built extension uber JAR file
 * edit Druid configuration to enable and configure the extension 
+* start up Druid with tutorial configuration
+* run DruidClientTest and enjoy output of ```tail -f  $DRUID_HOME/var/sv/broker.log```
 
 ```
 mkdir -p $DRUID_HOME/extensions/druid-grpc/
@@ -52,10 +52,11 @@ cp druid-grpc-0.13.0-incubating-SNAPSHOT.jar $DRUID_HOME/extensions/druid-grpc/
 cd $DRUID_HOME
 vi quickstart/tutorial/conf/druid/broker/runtime.properties
 
-druid.extensions.loadList=["druid-grpc"]```
+druid.extensions.loadList=["druid-grpc"]
 druid.grpc.enable=true
 druid.grpc.port=20001
 druid.grpc.numHandlerThreads=8
 druid.grpc.numServerThreads=4
 
 bin/supervise -c quickstart/tutorial/conf/tutorial-cluster.conf
+```

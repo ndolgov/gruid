@@ -11,7 +11,7 @@
     <name>gRPC-based row batch transport</name>
 
     <properties>
-        <grpc.version>1.16.1</grpc.version>
+        <grpc.version>1.15.1</grpc.version>
         <protoc.version>3.5.1</protoc.version>
         <slf4j.version>1.6.4</slf4j.version>
         <testng.version>6.8.8</testng.version>

@@ -39,14 +39,22 @@ public final class GrpcEndpointInitializer
   @LifecycleStart
   public void start()
   {
-    server = create(
-      executor -> new DruidRowBatchQueryService(executor, queryExecutor),
-      grpcConfig.getNumHandlerThreads(),
-      grpcConfig.getNumServerThreads(),
-      druidNode.getHost(),
-      grpcConfig.getPort());
+    final ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
 
-    server.start();
+    try {
+      Thread.currentThread().setContextClassLoader(GrpcEndpointInitializer.class.getClassLoader());
+
+      server = create(
+        executor -> new DruidRowBatchQueryService(executor, queryExecutor),
+        grpcConfig.getNumHandlerThreads(),
+        grpcConfig.getNumServerThreads(),
+        druidNode.getHost(),
+        grpcConfig.getPort());
+
+      server.start();
+    } finally {
+      Thread.currentThread().setContextClassLoader(oldLoader);
+    }
   }
 
   @LifecycleStop
