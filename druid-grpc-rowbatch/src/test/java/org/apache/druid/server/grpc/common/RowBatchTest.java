@@ -27,11 +27,13 @@ public final class RowBatchTest {
     @Test
     public void testRowBatchReader() {
         final QuerySchemas.QuerySchema schema = new QuerySchemas.QuerySchema(
-          Lists.newArrayList("D1"),
+        true,
           Lists.newArrayList(
-            new QuerySchemas.QuerySchemaMetric("M1", QuerySchemas.MetricType.DOUBLE),
-            new QuerySchemas.QuerySchemaMetric("M2", QuerySchemas.MetricType.DOUBLE),
-            new QuerySchemas.QuerySchemaMetric("M3", QuerySchemas.MetricType.DOUBLE)));
+            new QuerySchemas.QuerySchemaDimension(1, "D1")),
+          Lists.newArrayList(
+            new QuerySchemas.QuerySchemaMetric(2, "M1", QuerySchemas.MetricType.DOUBLE),
+            new QuerySchemas.QuerySchemaMetric(3, "M2", QuerySchemas.MetricType.DOUBLE),
+            new QuerySchemas.QuerySchemaMetric(4, "M3", QuerySchemas.MetricType.DOUBLE)));
 
         final RowBatch batch = createRowBatch();
         batch.reset();

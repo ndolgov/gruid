@@ -1,70 +1,73 @@
 package org.apache.druid.server.grpc;
 
-import org.apache.druid.data.input.Row;
+import org.apache.druid.query.groupby.ResultRow;
 import org.apache.druid.server.grpc.common.DictionaryEncoders.DictionaryEncoder;
 import org.apache.druid.server.grpc.common.FieldAccessors.DoubleFieldAccessor;
 import org.apache.druid.server.grpc.common.FieldAccessors.LongFieldAccessor;
 
-/** Extract field values from a Row returned by Druid query execution (i.e. a QueryLifecycle). */
+/** Extract field values from a ResultRow returned by Druid query execution (i.e. a QueryLifecycle). */
 public final class DruidFieldAccessors
 {
-  public static LongFieldAccessor<Row> timeAccessor()
+  public static LongFieldAccessor<ResultRow> timeAccessor()
   {
     return new TimeAccessor();
   }
 
-  public static LongFieldAccessor<Row> dimensionAccessor(String dimensionName, DictionaryEncoder dictionary)
+  public static LongFieldAccessor<ResultRow> dimensionAccessor(int index, DictionaryEncoder dictionary)
   {
-    return new DimensionAccessor(dimensionName, dictionary);
+    return new DimensionAccessor(index, dictionary);
   }
 
-  public static DoubleFieldAccessor<Row> doubleMetricAccessor(String metricName)
+  public static DoubleFieldAccessor<ResultRow> doubleMetricAccessor(int index)
   {
-    return new DoubleMetricAccessor(metricName);
+    return new DoubleMetricAccessor(index);
   }
 
-  static final class TimeAccessor implements LongFieldAccessor<Row>
+  static final class TimeAccessor implements LongFieldAccessor<ResultRow>
   {
     @Override
-    public long get(Row row)
+    public long get(ResultRow row)
     {
-      return row.getTimestamp().getMillis();
+      return row.getLong(0);
     }
   }
 
-  static final class DimensionAccessor implements LongFieldAccessor<Row>
+  static final class DimensionAccessor implements LongFieldAccessor<ResultRow>
   {
     private final DictionaryEncoder dictionary;
-    private final String dimensionName;
+    private final int index;
 
-    public DimensionAccessor(String dimensionName, DictionaryEncoder dictionary)
+    public DimensionAccessor(int index, DictionaryEncoder dictionary)
     {
       this.dictionary = dictionary;
-      this.dimensionName = dimensionName;
+      this.index = index;
     }
 
     @Override
-    public long get(Row row)
+    public long get(ResultRow row)
     {
-      final Object value = row.getRaw(dimensionName);
+      final Object value = row.get(index);
       return (value == null) ? DictionaryEncoder.NULL : dictionary.encode(value.toString());
     }
   }
 
-  static final class DoubleMetricAccessor implements DoubleFieldAccessor<Row>
+  static final class DoubleMetricAccessor implements DoubleFieldAccessor<ResultRow>
   {
-    private final String metricName;
+    private final int index;
 
-    public DoubleMetricAccessor(String metricName)
+    public DoubleMetricAccessor(int index)
     {
-      this.metricName = metricName;
+      this.index = index;
     }
 
     @Override
-    public double get(Row row)
+    public double get(ResultRow row)
     {
-      final Number value = row.getMetric(metricName);
+      final Number value = (Number) row.get(index);
       return (value == null) ? NULL : value.doubleValue();
     }
+  }
+
+  private DruidFieldAccessors() {
   }
 }

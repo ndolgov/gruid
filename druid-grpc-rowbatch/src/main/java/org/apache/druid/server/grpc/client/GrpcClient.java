@@ -30,7 +30,7 @@ public final class GrpcClient {
 
     public GrpcClient(String host, int port, ExecutorService executor) {
         this.executor = executor;
-        this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+        this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         this.stub = RowBatchQueryServiceGrpc.newStub(channel);
     }
 

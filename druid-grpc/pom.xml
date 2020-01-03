@@ -23,7 +23,7 @@
 
   <groupId>org.apache.druid.extensions.contrib</groupId>
   <artifactId>druid-grpc</artifactId>
-  <version>0.13.0-incubating-SNAPSHOT</version>
+  <version>0.16.1-incubating-SNAPSHOT</version>
   <name>druid-grpc</name>
   <description>Druid gRPC network endpoint</description>
 
@@ -38,12 +38,13 @@
     <easymock.version>3.4</easymock.version>
     <guava.version>20.0</guava.version> <!-- gRPC is compiled with 20.0, Druid is shipped with 16.0.1 -->
     <junit.version>4.12</junit.version>
-    <druid.version>0.13.0-incubating</druid.version> <!-- project.parent.version -->
+    <druid.version>0.16.1-incubating</druid.version> <!-- project.parent.version -->
     <slf4j.version>1.6.4</slf4j.version>
 
-    <grpc.version>1.15.1</grpc.version>
+    <grpc.version>1.26.0</grpc.version>
     <protoc.version>3.5.1</protoc.version>
-    <rowbatch.version>0.13.0-SNAPSHOT</rowbatch.version>
+    <rowbatch.version>0.16.1-SNAPSHOT</rowbatch.version>
+    <netty4.version>4.1.30.Final</netty4.version> <!-- from druid-0.16.1-incubating.pom -->
     <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
     <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -78,6 +79,12 @@
     </dependency>
 
     <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http2</artifactId>
+      <version>${netty4.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-protobuf</artifactId>
       <version>${grpc.version}</version>
@@ -87,13 +94,6 @@
       <groupId>io.grpc</groupId>
       <artifactId>grpc-stub</artifactId>
       <version>${grpc.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.druid</groupId>
-      <artifactId>druid-api</artifactId>
-      <version>${druid.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -164,7 +164,7 @@
 
     <dependency>
       <groupId>org.apache.druid</groupId>
-      <artifactId>druid-common</artifactId> <!-- CalciteTests dependencies-->
+      <artifactId>druid-core</artifactId> <!-- CalciteTests dependencies-->
       <version>${druid.version}</version>
       <type>test-jar</type>
       <scope>test</scope>

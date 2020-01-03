@@ -1,6 +1,6 @@
 package org.apache.druid.server.grpc;
 
-import org.apache.druid.data.input.Row;
+import org.apache.druid.query.groupby.ResultRow;
 import org.apache.druid.server.grpc.GrpcRowBatch.RowBatchSchema;
 import org.apache.druid.server.grpc.common.DictionaryEncoders;
 import org.apache.druid.server.grpc.common.DictionaryEncoders.DictionaryEncoder;
@@ -25,7 +25,7 @@ final class RowBatchContext
 
   public final RowBatchSchema schema;
 
-  public final RowBatchWriter<Row> rowWriter;
+  public final RowBatchWriter<ResultRow> rowWriter;
 
   public RowBatchContext(int batchSize, QuerySchema schema)
   {

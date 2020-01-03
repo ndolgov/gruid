@@ -2,8 +2,8 @@ package org.apache.druid.server.grpc;
 
 import com.google.protobuf.UnsafeByteOperations;
 import io.grpc.stub.StreamObserver;
-import org.apache.druid.data.input.Row;
 import org.apache.druid.java.util.common.logger.Logger;
+import org.apache.druid.query.groupby.ResultRow;
 import org.apache.druid.server.grpc.GrpcRowBatch.RowBatchResponse;
 import org.apache.druid.server.grpc.GrpcRowBatch.RowBatchSchema;
 import org.apache.druid.server.grpc.common.DictionaryEncoders.DictionaryEncoder;
@@ -29,7 +29,7 @@ public final class RowBatcher {
     this.ctx = ctx;
   }
 
-  public void onRow(Row row) {
+  public void onRow(ResultRow row) {
     log.info("Processing: " + row);
 
     if (ctx.batch.isFull()) {

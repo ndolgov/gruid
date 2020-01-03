@@ -5,20 +5,34 @@ import java.util.List;
 /** Technology-independent query schema */
 public final class QuerySchemas {
     public static final class QuerySchema {
-        public final List<String> dimensions;
+        public final List<QuerySchemaDimension> dimensions;
         public final List<QuerySchemaMetric> metrics;
+        public final boolean hasTimeDimension;
 
-        public QuerySchema(List<String> dimensions, List<QuerySchemaMetric> metrics) {
+        public QuerySchema(boolean hasTimeDimension, List<QuerySchemaDimension> dimensions, List<QuerySchemaMetric> metrics) {
+            this.hasTimeDimension = hasTimeDimension;
             this.dimensions = dimensions;
             this.metrics = metrics;
         }
     }
 
+    public static final class QuerySchemaDimension {
+        public final int index;
+        public final String name;
+
+        public QuerySchemaDimension(int index, String name) {
+            this.index = index;
+            this.name = name;
+        }
+    }
+
     public static final class QuerySchemaMetric {
+        public final int index;
         public final String name;
         public final MetricType type;
 
-        public QuerySchemaMetric(String name, MetricType type) {
+        public QuerySchemaMetric(int index, String name, MetricType type) {
+            this.index = index;
             this.name = name;
             this.type = type;
         }

@@ -47,10 +47,10 @@ Assuming official [Druid tutorial](http://druid.io/docs/latest/tutorials/index.h
 
 ```
 mkdir -p $DRUID_HOME/extensions/druid-grpc/
-cp druid-grpc-0.13.0-incubating-SNAPSHOT.jar $DRUID_HOME/extensions/druid-grpc/
+cp druid-grpc-0.16.1-incubating-SNAPSHOT.jar $DRUID_HOME/extensions/druid-grpc/
 
 cd $DRUID_HOME
-vi quickstart/tutorial/conf/druid/broker/runtime.properties
+vi $DRUID_HOME/conf/druid/single-server/micro-quickstart/broker/runtime.properties
 
 druid.extensions.loadList=["druid-grpc"]
 druid.grpc.enable=true
@@ -58,5 +58,5 @@ druid.grpc.port=20001
 druid.grpc.numHandlerThreads=8
 druid.grpc.numServerThreads=4
 
-bin/supervise -c quickstart/tutorial/conf/tutorial-cluster.conf
+./bin/start-micro-quickstart
 ```

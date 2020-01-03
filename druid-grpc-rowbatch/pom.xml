@@ -6,19 +6,18 @@
 
     <groupId>org.apache.druid.extensions.contrib</groupId>
     <artifactId>druid-grpc-rowbatch</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>0.16.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>gRPC-based row batch transport</name>
 
     <properties>
-        <grpc.version>1.15.1</grpc.version>
+        <grpc.version>1.26.0</grpc.version>
         <protoc.version>3.5.1</protoc.version>
         <slf4j.version>1.6.4</slf4j.version>
         <testng.version>6.8.8</testng.version>
-        <trove.version>3.0.3</trove.version>
+        <trove.version>3.1.0</trove.version>
         <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
-        <maven.os.plugin.version>1.5.0.Final</maven.os.plugin.version>
-        <maven.protobuf.plugin.version>0.5.1</maven.protobuf.plugin.version>
+        <maven.os.plugin.version>1.6.1</maven.os.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -43,7 +42,7 @@
 
         <dependency>
             <groupId>net.sf.trove4j</groupId>
-            <artifactId>trove4j</artifactId>
+            <artifactId>core</artifactId>
             <version>${trove.version}</version>
         </dependency>
 

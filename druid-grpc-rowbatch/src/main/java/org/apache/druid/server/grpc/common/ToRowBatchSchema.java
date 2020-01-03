@@ -16,7 +16,7 @@ public final class ToRowBatchSchema
     final GrpcRowBatch.RowBatchSchema.Builder builder = GrpcRowBatch.RowBatchSchema.newBuilder()
       .addFields(field(TIME, RowBatchFieldType.TIME));
 
-      querySchema.dimensions.forEach(dimensionName -> builder.addFields(field(dimensionName, RowBatchFieldType.DIMENSION)));
+      querySchema.dimensions.forEach(dimension -> builder.addFields(field(dimension.name, RowBatchFieldType.DIMENSION)));
 
       querySchema.metrics.forEach(metric -> builder.addFields(field(metric.name, metricType(metric.type))));
 

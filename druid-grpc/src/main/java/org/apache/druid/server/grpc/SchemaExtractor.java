@@ -19,15 +19,16 @@
 
 package org.apache.druid.server.grpc;
 
-import org.apache.druid.query.Query;
-import org.apache.druid.query.dimension.DimensionSpec;
+import org.apache.druid.query.aggregation.AggregatorFactory;
 import org.apache.druid.query.groupby.GroupByQuery;
 import org.apache.druid.server.grpc.common.QuerySchemas.MetricType;
 import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchema;
+import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchemaDimension;
 import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchemaMetric;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Extract the output schema from a query to configure the gRPC writer.
@@ -37,26 +38,33 @@ import java.util.stream.Collectors;
  */
 public final class SchemaExtractor
 {
-  public QuerySchema extract(Query query)
+  public QuerySchema extract(GroupByQuery query)
   {
-    if (query instanceof GroupByQuery) {
-      final GroupByQuery gbq = (GroupByQuery) query;
-      return new QuerySchema(extractDimensions(gbq), extractMetrics(gbq));
-    }
-
-    throw new IllegalArgumentException("Unsupported query type " + query);
+    final boolean hasTimeDimension = query.getResultRowHasTimestamp();
+    final int baseIndex = hasTimeDimension ? 1 : 0;
+    return new QuerySchema(
+      hasTimeDimension,
+      extractDimensions(baseIndex, query),
+      extractMetrics(baseIndex + query.getDimensions().size(), query));
   }
 
   // todo append query.getPostAggregatorSpecs
-  private List<QuerySchemaMetric> extractMetrics(GroupByQuery query)
+  private List<QuerySchemaMetric> extractMetrics(int baseIndex, GroupByQuery query)
   {
-    return query.getAggregatorSpecs().stream()
-      .map(af -> new QuerySchemaMetric(af.getName(), MetricType.determineType(af.getTypeName())))
+    return IntStream
+      .range(0, query.getAggregatorSpecs().size())
+      .mapToObj(index -> {
+        final AggregatorFactory af = query.getAggregatorSpecs().get(index);
+        return new QuerySchemaMetric(baseIndex + index, af.getName(), MetricType.determineType(af.getTypeName()));
+      })
       .collect(Collectors.toList());
   }
 
-  private List<String> extractDimensions(GroupByQuery query)
+  private List<QuerySchemaDimension> extractDimensions(int baseIndex, GroupByQuery query)
   {
-    return query.getDimensions().stream().map(DimensionSpec::getOutputName).collect(Collectors.toList());
+    return IntStream
+      .range(0, query.getDimensions().size())
+      .mapToObj(index -> new QuerySchemaDimension(baseIndex + index, query.getDimensions().get(index).getOutputName()))
+      .collect(Collectors.toList());
   }
 }

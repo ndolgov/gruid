@@ -22,13 +22,14 @@ package org.apache.druid.server.grpc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
-import org.apache.druid.data.input.Row;
 import org.apache.druid.guice.annotations.Json;
 import org.apache.druid.java.util.common.guava.Sequence;
 import org.apache.druid.java.util.common.guava.Yielder;
 import org.apache.druid.java.util.common.guava.Yielders;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.query.Query;
+import org.apache.druid.query.groupby.GroupByQuery;
+import org.apache.druid.query.groupby.ResultRow;
 import org.apache.druid.server.QueryLifecycle;
 import org.apache.druid.server.QueryLifecycleFactory;
 import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchema;
@@ -64,16 +65,16 @@ public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
     final QueryLifecycle queryLifecycle = queryLifecycleFactory.factorize();
 
     try {
-      final Query<Object> query = unmarshalQuery(queryJson);
+      final GroupByQuery query = unmarshalQuery(queryJson);
       final QuerySchema schema = schemaExtractor.extract(query);
       final RowBatcher batcher = new RowBatcher(observer, new RowBatchContext(10, schema));
 
       final Sequence seq = queryLifecycle.runSimple(query, AllowAllAuthenticator.ALLOW_ALL_RESULT, null); // todo client ref?
 
-      Yielder<Row> yielder = Yielders.each(seq); // todo <Row> is returned by GroupBy queries only
+      Yielder<ResultRow> yielder = Yielders.each(seq); // todo <ResultRow> is returned by GroupBy queries only
       try {
         while (!yielder.isDone()) {
-          final Row row = yielder.get();
+          final ResultRow row = yielder.get();
           batcher.onRow(row);
           yielder = yielder.next(null);
         }
@@ -95,10 +96,15 @@ public final class DruidGrpcQueryExecutor implements GrpcQueryExecutor
     }
   }
 
-  private Query<Object> unmarshalQuery(String queryJson)
+  private GroupByQuery unmarshalQuery(String queryJson)
   {
     try {
-      return jsonMapper.readValue(queryJson, Query.class);
+      final Query query = jsonMapper.readValue(queryJson, Query.class);
+      if (query instanceof GroupByQuery) {
+        return (GroupByQuery) query;
+      } else {
+        throw new IllegalArgumentException("Not a GROUP BY query");
+      }
     }
     catch (Exception e) {
       throw new IllegalArgumentException("Invalid query: " + queryJson, e);

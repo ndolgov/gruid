@@ -86,7 +86,7 @@ public class DruidGrpcQueryRunnerTest
       new QueryLifecycleFactory(
         warehouse,
         testDataset(),
-        new DefaultGenericQueryMetricsFactory(jsonMapper),
+        new DefaultGenericQueryMetricsFactory(),
         new NoopServiceEmitter(),
         testRequestLogger,
         new AuthConfig(),

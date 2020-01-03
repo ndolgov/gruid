@@ -1,6 +1,6 @@
 package org.apache.druid.server.grpc;
 
-import org.apache.druid.data.input.Row;
+import org.apache.druid.query.groupby.ResultRow;
 import org.apache.druid.server.grpc.common.DictionaryEncoders.DictionaryEncoder;
 import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchema;
 import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchemaMetric;
@@ -14,33 +14,36 @@ import org.apache.druid.server.grpc.common.RowBatchWriters.RowBatchWriter;
  */
 public final class DruidFieldWriters
 {
-  public static RowBatchWriter<Row> timeWriter(RowBatch batch) {
+  public static RowBatchWriter<ResultRow> timeWriter(RowBatch batch) {
     return RowBatchWriters.longWriter(DruidFieldAccessors.timeAccessor(), batch, 0);
   }
   
-  public static RowBatchWriter<Row> dimensionWriter(String dimensionName, DictionaryEncoder dictionary, RowBatch batch, int columnIndex) {
-    return RowBatchWriters.longWriter(DruidFieldAccessors.dimensionAccessor(dimensionName, dictionary), batch, columnIndex);
+  public static RowBatchWriter<ResultRow> dimensionWriter(int index, DictionaryEncoder dictionary, RowBatch batch, int columnIndex) {
+    return RowBatchWriters.longWriter(DruidFieldAccessors.dimensionAccessor(index, dictionary), batch, columnIndex);
   }
 
-  public static RowBatchWriter<Row> doubleMetricWriter(String metricName, RowBatch batch, int columnIndex) {
-    return RowBatchWriters.doubleWriter(DruidFieldAccessors.doubleMetricAccessor(metricName), batch, columnIndex);
+  public static RowBatchWriter<ResultRow> doubleMetricWriter(int index, RowBatch batch, int columnIndex) {
+    return RowBatchWriters.doubleWriter(DruidFieldAccessors.doubleMetricAccessor(index), batch, columnIndex);
   }
 
-  public static RowBatchWriter<Row> rowWriter(QuerySchema schema, RowBatch batch, DictionaryEncoder dictionary) {
-    final RowBatchWriter<Row>[] writers = new RowBatchWriter[1 + schema.dimensions.size() + schema.metrics.size()]; 
+  public static RowBatchWriter<ResultRow> rowWriter(QuerySchema schema, RowBatch batch, DictionaryEncoder dictionary) {
+    final int timeDimensionCount = schema.hasTimeDimension ? 1 : 0;
+    final RowBatchWriter<ResultRow>[] writers = new RowBatchWriter[timeDimensionCount + schema.dimensions.size() + schema.metrics.size()];
     int writerIndex = 0;
-    
-    writers[writerIndex++] = timeWriter(batch);
+
+    if (schema.hasTimeDimension) {
+      writers[writerIndex++] = timeWriter(batch);
+    }
 
     for (int dimensionIndex = 0; dimensionIndex < schema.dimensions.size(); dimensionIndex++) {
-      writers[writerIndex++] = dimensionWriter(schema.dimensions.get(dimensionIndex), dictionary, batch, dimensionIndex);
+      writers[writerIndex] = dimensionWriter(writerIndex++, dictionary, batch, dimensionIndex);
     }
 
     for (int metricIndex = 0; metricIndex < schema.metrics.size(); metricIndex++) {
       final QuerySchemaMetric metric = schema.metrics.get(metricIndex);
       switch (metric.type) {
         case DOUBLE:
-          writers[writerIndex++] = doubleMetricWriter(metric.name, batch, metricIndex);
+          writers[writerIndex] = doubleMetricWriter(writerIndex++, batch, metricIndex);
           break;
 
         default:
