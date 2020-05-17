@@ -1,10 +1,14 @@
 package org.apache.druid.server.grpc.common;
 
+import org.apache.druid.server.grpc.common.QuerySchemas.MetricType;
 import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchema;
 
 public class RowBatchReaders {
   public static RowBatchReader reader(QuerySchema schema) {
-    final RowBuffer row = new RowBuffer(new long[schema.dimensions.size() + 1], new double[schema.metrics.size()]);
+    final int longMetricCount = (int) schema.metrics.stream().filter(m -> (m.type == MetricType.LONG)).count();
+    final int doubleMetricCount = (int) schema.metrics.stream().filter(m -> (m.type == MetricType.DOUBLE)).count();
+
+    final RowBuffer row = new RowBuffer(new int[schema.dimensions.size()], new double[doubleMetricCount], new long[longMetricCount]);
     return new RowBatchReaderImpl(row);
   }
 
@@ -29,16 +33,19 @@ public class RowBatchReaders {
 
   /** A single row of data to be used as a mutable buffer while traversing a large dataset */
   public static final class RowBuffer {
-      public long timestamp;
-      public final long[] dimensions;
-      public final double[] measures;
+      public long timestamp; // the usual Unix time in milliseconds
+      public final int[] dimensions; // dictionary-encoded
+      public final double[] doubleMetrics;
+      public final long[] longMetrics;
 
-      public RowBuffer(long[] dimensions, double[] measures) {
-          this.dimensions = dimensions;
-          this.measures = measures;
+      public RowBuffer(int[] dimensions, double[] doubleMetrics, long[] longMetrics) {
+        this.dimensions = dimensions;
+        this.doubleMetrics = doubleMetrics;
+        this.longMetrics = longMetrics;
       }
   }
 
+  // assume timestamp column is always present
   private static final class RowBatchReaderImpl implements RowBatchReader {
     private final RowBuffer row;
     private RowBatch batch;
@@ -56,12 +63,16 @@ public class RowBatchReaders {
     public RowBuffer next() {
       row.timestamp = batch.longColumns[0][batch.index];
 
-      for (int i = 1; i < batch.longColumns.length; i++) {
-        row.dimensions[i - 1] = batch.longColumns[i][batch.index]; // TODO long metrics
+      for (int i = 1; i < batch.longColumns.length; i++) { // adjust index for time in the 1st long column
+        row.longMetrics[i - 1] = batch.longColumns[i][batch.index];
       }
 
       for (int i = 0; i < batch.doubleColumns.length; i++) {
-        row.measures[i] = batch.doubleColumns[i][batch.index];
+        row.doubleMetrics[i] = batch.doubleColumns[i][batch.index];
+      }
+
+      for (int i = 0; i < batch.intColumns.length; i++) {
+        row.dimensions[i] = batch.intColumns[i][batch.index];
       }
 
       batch.inc();

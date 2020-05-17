@@ -90,7 +90,7 @@ public final class Marshallers {
 
     }
 
-    // | flags: Long | nLongCols: Int | nDoubleCols: Int | colLength: Int |  LongCol1 | ... | DoubleColN  |
+    // | flags: Long | nLongCols: Int | nDoubleCols: Int | nIntCols: Int | colLength: Int |  LongCol1 | ... | DoubleColN  | ... | IntColN |
     static final class RowBatchMarshallerImpl implements Marshaller<RowBatch>
     {
         @Override
@@ -98,14 +98,16 @@ public final class Marshallers {
             int colLength = batch.index;
             int nLongCols = batch.longColumns.length;
             int nDoubleCols = batch.doubleColumns.length;
+            int nIntCols = batch.intColumns.length;
 
-            final int requiredSize = requiredSizeInBytes(colLength, nLongCols, nDoubleCols);
+            final int requiredSize = requiredSizeInBytes(colLength, nLongCols, nDoubleCols, nIntCols);
             final ByteBuffer buffer = ByteBuffer.allocate(requiredSize);
 
             buffer.putLong(1);
 
             buffer.putInt(nLongCols);
             buffer.putInt(nDoubleCols);
+            buffer.putInt(nIntCols);
             buffer.putInt(colLength);
 
             for (long[] column : batch.longColumns) {
@@ -120,12 +122,23 @@ public final class Marshallers {
                 }
             }
 
+            for (int[] column : batch.intColumns) {
+                for (int i = 0; i < colLength; i++) {
+                    buffer.putInt(column[i]);
+                }
+            }
+
             buffer.flip();
             return buffer;
         }
 
-        private int requiredSizeInBytes(int colLength, int nLongCols, int nDoubleCols) {
-            return Long.BYTES + Integer.BYTES*3 + nLongCols*colLength*Long.BYTES + nDoubleCols*colLength*Double.BYTES;
+        private int requiredSizeInBytes(int colLength, int nLongCols, int nDoubleCols, int nIntCols) {
+            return
+                Long.BYTES +
+                Integer.BYTES * 4 +
+                nLongCols * colLength * Long.BYTES +
+                nDoubleCols * colLength * Double.BYTES +
+                nIntCols * colLength * Integer.BYTES;
         }
 
         @Override
@@ -134,10 +147,11 @@ public final class Marshallers {
 
             final int nLongCols = buffer.getInt();
             final int nDoubleCols = buffer.getInt();
+            final int nIntCols = buffer.getInt();
             final int colLength = buffer.getInt();
 
             //final int requiredSize = requiredSizeInBytes(colLength, nLongCols, nDoubleCols);
-            return readColumns(buffer, new RowBatch(nLongCols, nDoubleCols, colLength), colLength);
+            return readColumns(buffer, new RowBatch(nLongCols, nDoubleCols, nIntCols, colLength), colLength);
         }
 
         public RowBatch unmarshal(ByteBuffer buffer, RowBatch batch) {
@@ -145,13 +159,14 @@ public final class Marshallers {
 
             final int nLongCols = buffer.getInt();
             final int nDoubleCols = buffer.getInt();
+            final int nIntCols = buffer.getInt();
             final int colLength = buffer.getInt();
 
             final RowBatch unmarshalled;
-            if (batch.hasCapacity(nLongCols, nDoubleCols, colLength)) {
+            if (batch.hasCapacity(nLongCols, nDoubleCols, nIntCols, colLength)) {
                 unmarshalled = readColumns(buffer, batch, colLength);
             } else {
-                unmarshalled = readColumns(buffer, new RowBatch(nLongCols, nDoubleCols, colLength), colLength);
+                unmarshalled = readColumns(buffer, new RowBatch(nLongCols, nDoubleCols, nIntCols, colLength), colLength);
             }
 
             return unmarshalled;
@@ -167,6 +182,12 @@ public final class Marshallers {
             for (double[] column : batch.doubleColumns) {
                 for (int i = 0; i < colLength; i++) {
                     column[i] = buffer.getDouble();
+                }
+            }
+
+            for (int[] column : batch.intColumns) {
+                for (int i = 0; i < colLength; i++) {
+                    column[i] = buffer.getInt();
                 }
             }
 

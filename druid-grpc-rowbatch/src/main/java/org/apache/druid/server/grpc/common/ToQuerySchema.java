@@ -31,12 +31,10 @@ public final class ToQuerySchema {
 
         case LONG_METRIC:
           metrics.add(new QuerySchemaMetric(index++, field.getFieldName(), MetricType.LONG));
-          index++;
           break;
 
         case DOUBLE_METRIC:
           metrics.add(new QuerySchemaMetric(index++, field.getFieldName(), MetricType.DOUBLE));
-          index++;
           break;
 
         default: throw new IllegalArgumentException("Unexpected field type" + field.getFieldType());

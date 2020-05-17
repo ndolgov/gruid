@@ -6,6 +6,7 @@ import org.apache.druid.server.grpc.common.DictionaryEncoders;
 import org.apache.druid.server.grpc.common.DictionaryEncoders.DictionaryEncoder;
 import org.apache.druid.server.grpc.common.Marshallers;
 import org.apache.druid.server.grpc.common.Marshallers.Marshaller;
+import org.apache.druid.server.grpc.common.QuerySchemas;
 import org.apache.druid.server.grpc.common.QuerySchemas.QuerySchema;
 import org.apache.druid.server.grpc.common.RowBatch;
 import org.apache.druid.server.grpc.common.RowBatchWriters.RowBatchWriter;
@@ -32,7 +33,7 @@ final class RowBatchContext
     this.batchMarshaller = Marshallers.rowBatchMarshaller();
     this.dictionary = DictionaryEncoders.dictionaryEncoder();
     this.dictionaryMarshaller = Marshallers.dictionaryMarshaller();
-    this.batch = new RowBatch(1 + schema.dimensions.size(), schema.metrics.size(), batchSize);
+    this.batch = createRowBatch(schema, batchSize);
     this.schema = ToRowBatchSchema.convert(schema);
     this.rowWriter = DruidFieldWriters.rowWriter(schema, batch, dictionary);
   }
@@ -43,5 +44,13 @@ final class RowBatchContext
 
   public ByteBuffer marshal(RowBatch batch) {
     return batchMarshaller.marshal(batch);
+  }
+
+  private static RowBatch createRowBatch(QuerySchema schema, int batchSize) {
+    final int timeDimensionCount = schema.hasTimeDimension ? 1 : 0;
+    final int longMetricCount = (int) schema.metrics.stream().filter(m -> (m.type == QuerySchemas.MetricType.LONG)).count();
+    final int doubleMetricCount = (int) schema.metrics.stream().filter(m -> (m.type == QuerySchemas.MetricType.DOUBLE)).count();
+
+    return new RowBatch(timeDimensionCount + longMetricCount, doubleMetricCount, schema.dimensions.size(), batchSize);
   }
 }

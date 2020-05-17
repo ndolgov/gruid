@@ -13,14 +13,16 @@ public final class ToRowBatchSchema
   public static final String TIME = "Time"; // todo dedicated QuerySchema type?
 
   public static RowBatchSchema convert(QuerySchema querySchema) {
-    final GrpcRowBatch.RowBatchSchema.Builder builder = GrpcRowBatch.RowBatchSchema.newBuilder()
-      .addFields(field(TIME, RowBatchFieldType.TIME));
+    final GrpcRowBatch.RowBatchSchema.Builder builder = GrpcRowBatch.RowBatchSchema.newBuilder();
+    if (querySchema.hasTimeDimension) {
+      builder.addFields(field(TIME, RowBatchFieldType.TIME));
+    }
 
-      querySchema.dimensions.forEach(dimension -> builder.addFields(field(dimension.name, RowBatchFieldType.DIMENSION)));
+    querySchema.dimensions.forEach(dimension -> builder.addFields(field(dimension.name, RowBatchFieldType.DIMENSION)));
 
-      querySchema.metrics.forEach(metric -> builder.addFields(field(metric.name, metricType(metric.type))));
+    querySchema.metrics.forEach(metric -> builder.addFields(field(metric.name, metricType(metric.type))));
 
-      return builder.build();
+    return builder.build();
   }
 
   private static RowBatchFieldType metricType(MetricType metricType) {

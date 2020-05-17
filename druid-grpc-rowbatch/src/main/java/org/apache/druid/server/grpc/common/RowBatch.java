@@ -12,16 +12,19 @@ public final class RowBatch {
 
     final long[][] longColumns;
 
+    final int[][] intColumns;
+
     final double[][] doubleColumns;
 
     final int capacity; // field array length
 
     int index = 0; // the next array offset available for writing; invariant: <=capacity
 
-    public RowBatch(int nLongColumns, int nDoubleColumns, int capacity) {
+    public RowBatch(int nLongColumns, int nDoubleColumns, int nIntColumns, int capacity) {
         this.capacity = capacity;
         this.longColumns = new long[nLongColumns][capacity];
         this.doubleColumns = new double[nDoubleColumns][capacity];
+        this.intColumns = new int[nIntColumns][capacity];
     }
 
     public boolean isFull() {
@@ -36,14 +39,15 @@ public final class RowBatch {
         index += 1;
     }
 
-    public boolean hasCapacity(int nLongColumns, int nDoubleColumns, int capacity) {
-        return (longColumns.length >= nLongColumns) && (doubleColumns.length >= nDoubleColumns) && (this.capacity >= capacity);
+    public boolean hasCapacity(int nLongColumns, int nDoubleColumns, int nIntColumns, int capacity) {
+        return (longColumns.length >= nLongColumns) && (doubleColumns.length >= nDoubleColumns) && (intColumns.length >= nIntColumns) && (this.capacity >= capacity);
     }
 
     public boolean eq(RowBatch that) {
         boolean sameSize =
             index == that.index &&
             longColumns.length == that.longColumns.length &&
+            intColumns.length == that.intColumns.length &&
             doubleColumns.length == that.doubleColumns.length;
 
         if (!sameSize) {
@@ -53,6 +57,16 @@ public final class RowBatch {
         for (int i = 0; i < longColumns.length; i++) {
             final long[] thisColumn = longColumns[i];
             final long[] thatColumn = that.longColumns[i];
+            for (int j = 0; j < index; j++) {
+                if (thisColumn[j] != thatColumn[j]) {
+                    return false;
+                }
+            }
+        }
+
+        for (int i = 0; i < intColumns.length; i++) {
+            final int[] thisColumn = intColumns[i];
+            final int[] thatColumn = that.intColumns[i];
             for (int j = 0; j < index; j++) {
                 if (thisColumn[j] != thatColumn[j]) {
                     return false;
@@ -78,6 +92,6 @@ public final class RowBatch {
 
     @Override
     public String toString() {
-        return "{RowBatch:capacity=" + capacity + ", LCs=" + longColumns.length + ", DCs=" + doubleColumns.length + "}";
+        return "{RowBatch:capacity=" + capacity + ", LCs=" + longColumns.length + ", ICs=" + intColumns.length + ", DCs=" + doubleColumns.length + "}";
     }
 }

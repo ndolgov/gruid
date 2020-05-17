@@ -3,6 +3,7 @@ package org.apache.druid.server.grpc;
 import org.apache.druid.query.groupby.ResultRow;
 import org.apache.druid.server.grpc.common.DictionaryEncoders.DictionaryEncoder;
 import org.apache.druid.server.grpc.common.FieldAccessors.DoubleFieldAccessor;
+import org.apache.druid.server.grpc.common.FieldAccessors.IntFieldAccessor;
 import org.apache.druid.server.grpc.common.FieldAccessors.LongFieldAccessor;
 
 /** Extract field values from a ResultRow returned by Druid query execution (i.e. a QueryLifecycle). */
@@ -13,7 +14,7 @@ public final class DruidFieldAccessors
     return new TimeAccessor();
   }
 
-  public static LongFieldAccessor<ResultRow> dimensionAccessor(int index, DictionaryEncoder dictionary)
+  public static IntFieldAccessor<ResultRow> dimensionAccessor(int index, DictionaryEncoder dictionary)
   {
     return new DimensionAccessor(index, dictionary);
   }
@@ -21,6 +22,11 @@ public final class DruidFieldAccessors
   public static DoubleFieldAccessor<ResultRow> doubleMetricAccessor(int index)
   {
     return new DoubleMetricAccessor(index);
+  }
+
+  public static LongFieldAccessor<ResultRow> longMetricAccessor(int index)
+  {
+    return new LongMetricAccessor(index);
   }
 
   static final class TimeAccessor implements LongFieldAccessor<ResultRow>
@@ -32,7 +38,7 @@ public final class DruidFieldAccessors
     }
   }
 
-  static final class DimensionAccessor implements LongFieldAccessor<ResultRow>
+  static final class DimensionAccessor implements IntFieldAccessor<ResultRow>
   {
     private final DictionaryEncoder dictionary;
     private final int index;
@@ -44,7 +50,7 @@ public final class DruidFieldAccessors
     }
 
     @Override
-    public long get(ResultRow row)
+    public int get(ResultRow row)
     {
       final Object value = row.get(index);
       return (value == null) ? DictionaryEncoder.NULL : dictionary.encode(value.toString());
@@ -65,6 +71,23 @@ public final class DruidFieldAccessors
     {
       final Number value = (Number) row.get(index);
       return (value == null) ? NULL : value.doubleValue();
+    }
+  }
+
+  static final class LongMetricAccessor implements LongFieldAccessor<ResultRow>
+  {
+    private final int index;
+
+    public LongMetricAccessor(int index)
+    {
+      this.index = index;
+    }
+
+    @Override
+    public long get(ResultRow row)
+    {
+      final Number value = (Number) row.get(index);
+      return (value == null) ? -1 : value.longValue();
     }
   }
 

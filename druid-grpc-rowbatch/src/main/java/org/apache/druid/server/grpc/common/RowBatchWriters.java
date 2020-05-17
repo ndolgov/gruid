@@ -1,6 +1,7 @@
 package org.apache.druid.server.grpc.common;
 
 import org.apache.druid.server.grpc.common.FieldAccessors.DoubleFieldAccessor;
+import org.apache.druid.server.grpc.common.FieldAccessors.IntFieldAccessor;
 import org.apache.druid.server.grpc.common.FieldAccessors.LongFieldAccessor;
 
 /**
@@ -39,6 +40,13 @@ public final class RowBatchWriters {
         return new DoubleWriter<>(accessor, batch, columnIndex);
     }
 
+    /**
+     * @param columnIndex the RowBatch int array to write to; the client is responsible for keeping track of column usage
+     */
+    public static <T> RowBatchWriter<T> intWriter(IntFieldAccessor<T> accessor, RowBatch batch, int columnIndex) {
+        return new IntWriter<>(accessor, batch, columnIndex);
+    }
+
     static final class LongWriter<T> implements RowBatchWriter<T> {
         private final LongFieldAccessor<T> accessor;
         private final RowBatch batch;
@@ -70,6 +78,23 @@ public final class RowBatchWriters {
         @Override
         public void write(T row) {
             batch.doubleColumns[columnIndex][batch.index] = accessor.get(row);
+        }
+    }
+
+    static final class IntWriter<T> implements RowBatchWriter<T> {
+        private final IntFieldAccessor<T> accessor;
+        private final RowBatch batch;
+        private final int columnIndex;
+
+        public IntWriter(IntFieldAccessor<T> accessor, RowBatch batch, int columnIndex) {
+            this.accessor = accessor;
+            this.batch = batch;
+            this.columnIndex = columnIndex;
+        }
+
+        @Override
+        public void write(T row) {
+            batch.intColumns[columnIndex][batch.index] = accessor.get(row);
         }
     }
 

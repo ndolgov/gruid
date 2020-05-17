@@ -19,11 +19,15 @@ public final class DruidFieldWriters
   }
   
   public static RowBatchWriter<ResultRow> dimensionWriter(int index, DictionaryEncoder dictionary, RowBatch batch, int columnIndex) {
-    return RowBatchWriters.longWriter(DruidFieldAccessors.dimensionAccessor(index, dictionary), batch, columnIndex);
+    return RowBatchWriters.intWriter(DruidFieldAccessors.dimensionAccessor(index, dictionary), batch, columnIndex);
   }
 
   public static RowBatchWriter<ResultRow> doubleMetricWriter(int index, RowBatch batch, int columnIndex) {
     return RowBatchWriters.doubleWriter(DruidFieldAccessors.doubleMetricAccessor(index), batch, columnIndex);
+  }
+
+  public static RowBatchWriter<ResultRow> longMetricWriter(int index, RowBatch batch, int columnIndex) {
+    return RowBatchWriters.longWriter(DruidFieldAccessors.longMetricAccessor(index), batch, columnIndex);
   }
 
   public static RowBatchWriter<ResultRow> rowWriter(QuerySchema schema, RowBatch batch, DictionaryEncoder dictionary) {
@@ -46,8 +50,12 @@ public final class DruidFieldWriters
           writers[writerIndex] = doubleMetricWriter(writerIndex++, batch, metricIndex);
           break;
 
+        case LONG:
+          writers[writerIndex] = longMetricWriter(writerIndex++, batch, metricIndex);
+          break;
+
         default:
-          throw new IllegalArgumentException("Unexpected metric type: " + metric.type); // todo support long metrics?
+          throw new IllegalArgumentException("Unexpected metric type: " + metric.type);
       }
     }
 

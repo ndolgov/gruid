@@ -22,4 +22,12 @@ public final class FieldAccessors {
 
         double get(T row);
     }
+
+    /**
+     * Extract an int value form the current input record
+     * @param <T> input record type
+     */
+    public interface IntFieldAccessor<T> {
+        int get(T row);
+    }
 }
