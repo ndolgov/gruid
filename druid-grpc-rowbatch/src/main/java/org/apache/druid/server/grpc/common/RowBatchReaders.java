@@ -82,7 +82,7 @@ public class RowBatchReaders {
 
     @Override
     public RowBatchReader reset(RowBatch batch) {
-      this.batch = batch;
+      this.batch = batch.reset();
       return this;
     }
   }

@@ -27,12 +27,21 @@ public final class RowBatch {
         this.intColumns = new int[nIntColumns][capacity];
     }
 
+    public RowBatch(long[][] longColumns, int[][] intColumns, double[][] doubleColumns, int capacity, int size) {
+        this.longColumns = longColumns;
+        this.intColumns = intColumns;
+        this.doubleColumns = doubleColumns;
+        this.capacity = capacity;
+        this.index = size;
+    }
+
     public boolean isFull() {
         return index >= capacity;
     }
 
-    public void reset() {
+    public RowBatch reset() {
         index = 0;
+        return this;
     }
 
     public void inc() {

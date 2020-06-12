@@ -37,10 +37,7 @@ public final class RowBatchTest {
             new QuerySchemas.QuerySchemaMetric(4, "M3", QuerySchemas.MetricType.DOUBLE),
             new QuerySchemas.QuerySchemaMetric(5, "M4", QuerySchemas.MetricType.DOUBLE)));
 
-        final RowBatch batch = createRowBatch();
-        batch.reset();
-
-        final RowBatchReaders.RowBatchReader reader = RowBatchReaders.reader(schema).reset(batch);
+        final RowBatchReaders.RowBatchReader reader = RowBatchReaders.reader(schema).reset(createRowBatch());
 
         assertTrue(reader.hasNext());
         final RowBuffer row1 = reader.next();

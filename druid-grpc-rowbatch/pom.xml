@@ -17,6 +17,7 @@
         <testng.version>6.8.8</testng.version>
         <trove.version>3.1.0</trove.version>
         <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
+        <maven.jar.plugin.version>3.1.0</maven.jar.plugin.version>
         <maven.os.plugin.version>1.6.1</maven.os.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -104,6 +105,18 @@
                         <goals>
                             <goal>compile</goal>
                             <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
                         </goals>
                     </execution>
                 </executions>

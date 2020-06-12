@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>net.ndolgov.gruid</groupId>
+  <artifactId>druid-forecast</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>druid-forecast</name>
+  <description>Druid Forecasting Operators</description>
+
+  <properties>
+    <!-- TODO remove the following when put under "incubator-druid/extensions-contrib" -->
+    <guava.version>20.0</guava.version> <!-- gRPC is compiled with 20.0, Druid is shipped with 16.0.1 -->
+    <druid.version>0.16.1-incubating</druid.version>
+    <netty4.version>4.1.30.Final</netty4.version> <!-- from druid-0.16.1-incubating.pom -->
+    <rowbatch.version>0.16.2-SNAPSHOT</rowbatch.version>
+    <trove.version>3.0.3</trove.version>
+
+    <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
+    <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <slf4j.version>1.7.28</slf4j.version>
+    <scalatest.version>3.0.8</scalatest.version>
+
+    <scala.version>2.12.3</scala.version>
+    <maven.scala.version>4.3.0</maven.scala.version>
+    <maven.plugin.exec.version>1.6.0</maven.plugin.exec.version>
+    <maven.scalatest.version>2.0.0</maven.scalatest.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.druid.extensions.contrib</groupId>
+      <artifactId>druid-grpc-rowbatch</artifactId>
+      <version>${rowbatch.version}</version>
+        <exclusions>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-codec-http2</artifactId>
+          <version>${netty4.version}</version> <!-- use a version more compatible than the one brought by gRPC in druid-grpc-rowbatch-->
+      </dependency>
+
+    <dependency>
+      <groupId>net.sf.trove4j</groupId>
+      <artifactId>trove4j</artifactId>
+      <version>${trove.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.druid</groupId>
+      <artifactId>druid-core</artifactId>
+      <version>${druid.version}</version>
+        <exclusions>
+            <exclusion>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-jul</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.calcite.avatica</groupId>
+      <artifactId>avatica-core</artifactId>
+      <version>1.16.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.12</artifactId>
+      <version>${scalatest.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>1.10.19</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.druid.extensions.contrib</groupId>
+      <artifactId>druid-grpc-rowbatch</artifactId>
+      <version>${rowbatch.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>${maven.scala.version}</version>
+        <configuration>
+          <recompileMode>incremental</recompileMode>
+          <scalaVersion>${scala.version}</scalaVersion>
+        </configuration>
+        <executions>
+          <execution>
+            <id>scala-compile</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>add-source</goal>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>scala-test-compile</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+        <version>${maven.scalatest.version}</version>
+        <configuration>
+          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+          <suites>
+            net.ndolgov.sparkdatasourcetest.connector.LuceneDataSourceTestSuit,
+            net.ndolgov.sparkdatasourcetest.connector.LuceneSchemaTestSuit
+          </suites>
+        </configuration>
+        <executions>
+          <execution>
+            <id>test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.14.1</version>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

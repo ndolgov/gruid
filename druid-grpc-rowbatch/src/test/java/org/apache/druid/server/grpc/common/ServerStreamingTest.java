@@ -1,10 +1,9 @@
 package org.apache.druid.server.grpc.common;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.grpc.BindableService;
 import io.grpc.stub.StreamObserver;
 import org.apache.druid.server.grpc.GrpcRowBatch;
+import org.apache.druid.server.grpc.GrpcRowBatch.QueryRequest;
 import org.apache.druid.server.grpc.GrpcRowBatch.RowBatchResponse;
 import org.apache.druid.server.grpc.GrpcRowBatch.RowBatchSchema.RowBatchField;
 import org.apache.druid.server.grpc.GrpcRowBatch.RowBatchSchema.RowBatchField.RowBatchFieldType;
@@ -15,30 +14,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.druid.server.grpc.common.TestRowBatchQueryServices.executor;
 import static org.testng.Assert.*;
 
 public final class ServerStreamingTest {
     private static final Logger logger = LoggerFactory.getLogger(ServerStreamingTest.class);
     private static final int PORT = 20000;
-    private static final long REQUEST_ID = 123;
     private static final String HOSTNAME = "127.0.0.1";
-    private static final int THREADS = 4;
-    private static final String RESULT = "RESULT";
 
     @Test
     public void testRowBatchStreaming() throws Exception {
-        final GrpcServer server = new GrpcServer(HOSTNAME, PORT, services(), serverExecutor());
+        final GrpcServer server = new GrpcServer(HOSTNAME, PORT, services(), executor("rpc-server-%d"));
         server.start();
 
 
-        final GrpcClient client = new GrpcClient(HOSTNAME, PORT, clientExecutor());
+        final GrpcClient client = new GrpcClient(HOSTNAME, PORT, executor("rpc-client-%d"));
 
         try {
             invokeRpc(client).get(5_000, TimeUnit.MILLISECONDS);
@@ -63,21 +57,13 @@ public final class ServerStreamingTest {
         dictionary.encode("CAN");
 
         final RowBatch originalBatch = RowBatchTest.createRowBatch();
-        final ByteBuffer rowBatch = Marshallers.rowBatchMarshaller().marshal(originalBatch);
-        rowBatch.flip();
-
-        return Lists.newArrayList(
-            new TestRowBatchQueryService(
-                handlerExecutor(),
-                schema,
-                rowBatch,
-                Marshallers.dictionaryMarshaller().marshal(dictionary)));
+        return TestRowBatchQueryServices.bindableService(schema, dictionary, originalBatch);
     }
 
     private CompletableFuture invokeRpc(GrpcClient client) {
         final CompletableFuture future = new CompletableFuture();
 
-        client.call(requestA(), new StreamObserver<RowBatchResponse>() {
+        client.call(QueryRequest.newBuilder().setQuery("todo").build(), new StreamObserver<RowBatchResponse>() {
             @Override
             public void onNext(RowBatchResponse response) {
                 logger.info("onNext ");
@@ -114,21 +100,5 @@ public final class ServerStreamingTest {
         });
 
         return future;
-    }
-
-    private static GrpcRowBatch.QueryRequest requestA() {
-        return GrpcRowBatch.QueryRequest.newBuilder().setQuery("todo").build();
-    }
-
-    private static ExecutorService clientExecutor() {
-        return Executors.newFixedThreadPool(THREADS, new ThreadFactoryBuilder().setNameFormat("rpc-client-%d").build());
-    }
-
-    private static ExecutorService serverExecutor() {
-        return Executors.newFixedThreadPool(THREADS, new ThreadFactoryBuilder().setNameFormat("rpc-server-%d").build());
-    }
-
-    private static ExecutorService handlerExecutor() {
-        return Executors.newFixedThreadPool(THREADS, new ThreadFactoryBuilder().setNameFormat("server-%d").build());
     }
 }
