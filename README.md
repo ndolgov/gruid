@@ -31,6 +31,10 @@ operations such as comparison are much more efficient with integer types
 * Avatica - it seems to have a binary, protobuf-based transport but there's not enough documentation. The Calcite integration
 is rather complicated and it will take time to grok.
 
+##### Realistic usage example
+
+Please see the druid-forecast module README file for a PoC application using this approach as a client. 
+
 ##### Running locally
 
 Executing ```DruidGrpcQueryRunnerTest``` is the easiest way to see this extension working with little hassle.
