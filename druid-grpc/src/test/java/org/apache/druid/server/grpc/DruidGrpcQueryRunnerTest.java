@@ -21,18 +21,22 @@ package org.apache.druid.server.grpc;
 
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import io.grpc.stub.StreamObserver;
 import org.apache.druid.jackson.DefaultObjectMapper;
+import org.apache.druid.java.util.common.io.Closer;
 import org.apache.druid.java.util.emitter.EmittingLogger;
 import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.math.expr.ExprMacroTable;
 import org.apache.druid.query.DefaultGenericQueryMetricsFactory;
+import org.apache.druid.query.DefaultQueryConfig;
 import org.apache.druid.query.MapQueryToolChestWarehouse;
 import org.apache.druid.query.QuerySegmentWalker;
 import org.apache.druid.query.QueryToolChestWarehouse;
 import org.apache.druid.query.expression.LookupEnabledTestExprMacroTable;
 import org.apache.druid.server.QueryLifecycleFactory;
+import org.apache.druid.server.QueryStackTests;
 import org.apache.druid.server.grpc.common.DictionaryEncoders;
 import org.apache.druid.server.grpc.common.Marshallers;
 import org.apache.druid.server.grpc.common.RowBatch;
@@ -53,7 +57,7 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 
 /**
- *
+ * Based on org.apache.druid.sql.calcite.BaseCalciteQueryTest
  */
 public class DruidGrpcQueryRunnerTest
 {
@@ -90,7 +94,8 @@ public class DruidGrpcQueryRunnerTest
         new NoopServiceEmitter(),
         testRequestLogger,
         new AuthConfig(),
-        AuthTestUtils.TEST_AUTHORIZER_MAPPER
+        AuthTestUtils.TEST_AUTHORIZER_MAPPER,
+        Suppliers.ofInstance(new DefaultQueryConfig(ImmutableMap.of()))
       ),
       jsonMapper);
   }
@@ -99,7 +104,7 @@ public class DruidGrpcQueryRunnerTest
   {
     try {
       return CalciteTests.createMockWalker(
-        CalciteTests.createQueryRunnerFactoryConglomerate().lhs,
+        QueryStackTests.createQueryRunnerFactoryConglomerate(Closer.create()),
         temporaryFolder.newFolder());
     }
     catch (Exception e) {

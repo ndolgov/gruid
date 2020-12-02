@@ -51,7 +51,7 @@ Assuming official [Druid tutorial](http://druid.io/docs/latest/tutorials/index.h
 
 ```
 mkdir -p $DRUID_HOME/extensions/druid-grpc/
-cp druid-grpc-0.16.1-incubating-SNAPSHOT.jar $DRUID_HOME/extensions/druid-grpc/
+cp druid-grpc-0.20.0-SNAPSHOT.jar $DRUID_HOME/extensions/druid-grpc/
 
 cd $DRUID_HOME
 vi $DRUID_HOME/conf/druid/single-server/micro-quickstart/broker/runtime.properties

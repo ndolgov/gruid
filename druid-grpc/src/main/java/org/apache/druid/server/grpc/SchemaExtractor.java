@@ -55,7 +55,7 @@ public final class SchemaExtractor
       .range(0, query.getAggregatorSpecs().size())
       .mapToObj(index -> {
         final AggregatorFactory af = query.getAggregatorSpecs().get(index);
-        return new QuerySchemaMetric(baseIndex + index, af.getName(), MetricType.determineType(af.getTypeName()));
+        return new QuerySchemaMetric(baseIndex + index, af.getName(), MetricType.determineType(af.getType().toString())); // TODO org.apache.druid.segment.column.ValueType ?
       })
       .collect(Collectors.toList());
   }
