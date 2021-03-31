@@ -13,7 +13,7 @@
     <!-- TODO remove the following when put under "incubator-druid/extensions-contrib" -->
     <guava.version>20.0</guava.version> <!-- gRPC is compiled with 20.0, Druid is shipped with 16.0.1 -->
     <druid.version>0.20.0</druid.version>
-    <netty4.version>4.1.48.Final</netty4.version> <!-- from druid-0.16.1-incubating.pom -->
+    <netty4.version>4.1.61.Final</netty4.version> <!-- from druid-0.16.1-incubating.pom -->
     <rowbatch.version>0.20.0-SNAPSHOT</rowbatch.version>
     <trove.version>3.0.3</trove.version>
 
